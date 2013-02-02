@@ -1,31 +1,51 @@
 #!/usr/local/bin/python3
 import math
 import decimal
+import sys
+if len(sys.argv)>1:
+	file=open(sys.argv[1]) # Will bomb happily if the file doesn't exist
+	curline=[]
+	def input(prompt): # When reading from file, simulate input() with a nice echo
+		global curline
+		while not curline: curline=next(file).split()
+		ret,*curline=curline
+		print(prompt+ret)
+		return ret
+
+def hms(sec):
+	return "%d:%02d:%02d"%(sec//3600,sec//60%60,sec%60)
+
 accelrate = float(input("Acceleration rate (m/s/s): "))
 decelrate = float(input("Deceleration rate (m/s/s): "))
 initspeed = float(input("Initial speed (km/h, blank=0): ") or 0)/3.6 #convert to m/s while we're at it
 trainmaxspeed = float(input("Maximum speed of vehicle (km/h): "))
 finalspeed = float(input("Final speed (km/h, blank=0): ") or 0)/3.6 #ditto
 section=[]
-while True:
-	dist=input("Segment "+str(len(section)+1)+" length (km): ")
-	if dist=="": break
-	speedlimit=int(input("Speed limit (negative for curve radius, zero for line speed): ") or 0)
-	if speedlimit>=0: speedlimit=speedlimit or trainmaxspeed
-	elif speedlimit>=-240: speedlimit=30
-	elif speedlimit>=-500: speedlimit=50
-	elif speedlimit>=-700: speedlimit=65
-	elif speedlimit>=-1000: speedlimit=80
-	elif speedlimit>=-1800: speedlimit=160
-	elif speedlimit>=-7000: speedlimit=250
-	else: speedlimit=400
-	print("Using speed limit",speedlimit)
-	if section: section[-1].append(min(speedlimit,trainmaxspeed)/3.6)
-	section.append([int(decimal.Decimal(dist)*1000),min(speedlimit,trainmaxspeed)/3.6]) #convert to meters and m/s and put them both into the array
+try:
+	while True:
+		dist=input("Segment "+str(len(section)+1)+" length (km): ")
+		if dist=="": break
+		speedlimit=int(input("Speed limit (negative for curve radius, zero for line speed): ") or 0)
+		if speedlimit>=0: speedlimit=speedlimit or trainmaxspeed
+		elif speedlimit>=-240: speedlimit=30
+		elif speedlimit>=-500: speedlimit=50
+		elif speedlimit>=-700: speedlimit=65
+		elif speedlimit>=-1000: speedlimit=80
+		elif speedlimit>=-1800: speedlimit=160
+		elif speedlimit>=-7000: speedlimit=250
+		else: speedlimit=400
+		print("Using speed limit",speedlimit)
+		if section: section[-1].append(min(speedlimit,trainmaxspeed)/3.6)
+		section.append([int(decimal.Decimal(dist)*1000),min(speedlimit,trainmaxspeed)/3.6]) #convert to meters and m/s and put them both into the array
+except StopIteration:
+	# End of file is raised this way
+	pass
 if section: section[-1].append(finalspeed)
 print()
 tottime=0
+j=0
 for distance,maxspeed,nextspeed in section:
+	j+=1
 	finalspeed=min(nextspeed,maxspeed) #we're overwriting a variable here, to save recoding. But we're finished with the inputted value of finalspeed as it was put into the last entry of the list.
 	acceltime = (maxspeed-initspeed)/accelrate
 	acceldist = (maxspeed+initspeed)*acceltime/2
@@ -72,4 +92,5 @@ for distance,maxspeed,nextspeed in section:
 		cruisetime=cruisedist/maxspeed
 	totaltime=int(acceltime+cruisetime+deceltime)
 	tottime=tottime+totaltime
-	print("Section ***, ",distance/1000,"km in ",totaltime," sec, ending at ",finalspeed*3.6,"km/h - total running time ",tottime,"sec")
+	# print("Section ",j,": ",distance/1000,"km in ",totaltime," sec, ending at ",finalspeed*3.6,"km/h - total running time ",tottime,"sec")
+	print("Section %2d: %7.2fkm in %s, ending at %6.2fkm/h - total running time %s"%(j,distance/1000,hms(totaltime),finalspeed*3.6,hms(tottime)))
