@@ -1,0 +1,82 @@
+#define Title Running Time calculator
+#include !Top.ppw
+
+<div class="contentblock"><h1>Running Time calculator</h1><div class="textblock">
+<p>Decimals permitted anywhere.</p>
+<form>
+<table>
+<tr><td colspan=2>Acceleration [m/s/s]</td><td><input name="accel" size="10"/></td><td>Curve radius:</td></tr>
+<tr><td colspan=2>Deceleration [m/s/s]</td><td><input name="decel" size="10"/></td><td><label><input type="radio" id=speed1 name="speed" value="speed1">Up to 241m</label></td></tr>
+<tr><td colspan=2>Init speed [km/h]</td><td><input name="initspeed" value="0" size="10"/></td><td><label><input type="radio" id=speed2 name="speed" value="speed2">242-503m</label></td></tr>
+<tr><td colspan=2>Max speed [km/h]</td><td><input name="maxspeed" size="10"/></td><td><label><input type="radio" id=speed3 name="speed" value="speed3">504-704m</label></td></tr>
+<tr><td colspan=2>Final speed [km/h]</td><td><input name="finalspeed" value="0" size="10"/></td><td><label><input type="radio" id=speed4 name="speed" value="speed4">705-1006m</label></td></tr>
+<tr><td colspan=2>Distance [km]</td><td><input id="distance" name="distance" size="10"/></td><td><label><input type="radio" id=speed5 name="speed" value="speed5">1007-1800m</label></td></tr>
+<tr><td>(or)</td><td>Start</td><td><input id="start" name="start" size="10"/></td><td><label><input type="radio" id=speed6 name="speed" value="speed6">1800-7000m</label></td></tr>
+<tr><td></td><td>End</td><td><input id="end" name="end" size="10" onblur="calcdist()"/></td><td><label><input type="radio" id=speed7 name="speed" value="speed7" checked="checked">Over 7000m or straight</label></td></tr>
+</table>
+<script type="text/javascript">
+<!-- 
+function calcdist()
+{
+    var start=document.getElementById("start").value;
+    var end=document.getElementById("end").value;
+    if (start=="" || end=="") return;
+    document.getElementById("distance").value=end-start;
+    document.getElementById("start").value=end;
+    document.getElementById("end").value="";
+}
+// -->
+</script>
+<p><input type=button onclick="calc()" value="Calculate!"/></p>
+<div id="msg1"></div>
+<div id="msg2"></div>
+<div id="msg3"></div>
+</form>
+<script type="text/javascript">
+<!--
+var msg1=document.getElementById("msg1");
+var msg2=document.getElementById("msg2");
+function calc()
+{
+/* Fetch the values from the form, and force them to be interpreted as numbers. Mostly this won't be a problem (as soon as I multiply or divide, they'll be numbers), but if the first operation done is addition, then it'll be misinterpreted as string concatenation. */
+var accel=document.forms[0].accel.value-0;
+var decel=document.forms[0].decel.value-0;
+var maxspeed=document.forms[0].maxspeed.value-0;
+var distance=document.forms[0].distance.value-0;
+maxspeed/=3.6; /* m/s */
+distance*=1000; /* m */
+var acceltime=maxspeed/accel;
+var acceldist=maxspeed*acceltime/2;
+var deceltime=maxspeed/decel;
+var deceldist=maxspeed*deceltime/2;
+var cruisetime=0;
+if (acceldist+deceldist>distance)
+{
+/* Won't hit top speed */
+acceldist=distance*decel/(accel+decel); /* m - distance before start braking */
+acceltime=Math.sqrt(2*acceldist/accel);
+topspeed=acceltime*accel;
+msg1.innerHTML="Kill power and apply brakes after "+Math.round(acceltime)+" sec, at "+Math.round(acceldist)+" m, having reached a top speed of "+Math.round(topspeed*3.6)+" km/h";
+deceldist=distance-acceldist;
+deceltime=topspeed/decel;
+cruisetime=0;
+}
+else
+{
+var cruisedist=distance-acceldist-deceldist;
+cruisetime=Math.round(cruisedist/maxspeed);
+msg1.innerHTML="Will cruise for "+cruisetime+" seconds or "+minsec(cruisetime);
+}
+totaltime=Math.round(acceltime+cruisetime+deceltime);
+msg2.innerHTML="Total running time: "+totaltime+" seconds or "+minsec(totaltime);
+return false;
+}
+function minsec(t)
+{
+var sec=t%60;
+return ((t-sec)/60)+":"+sec; /* Why does Javascript not have a simple integer-division operator?!? */
+}
+// -->
+</script>
+</div></div>
+#include !Bottom.ppw
